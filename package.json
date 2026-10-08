@@ -21,6 +21,8 @@
 		"@tailwindcss/vite": "^4.3.3",
 		"class-variance-authority": "^0.7.1",
 		"cn": "^0.4.0",
+		"dexie": "^4.4.6",
+		"dexie-react-hooks": "^4.4.0",
 		"prettier-plugin-tailwindcss": "^0.8.1",
 		"react": "^19.2.8",
 		"react-dom": "^19.2.8",
