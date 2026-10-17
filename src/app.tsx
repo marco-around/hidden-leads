@@ -1,17 +1,12 @@
-import { Button } from './components/ui/button'
-import { toast, Toaster } from './components/ui/toast'
+import { Toaster } from './components/ui/toast'
+import { ThemeProvider } from './hooks/use-theme'
+import { HomePage } from './pages/home-page'
+
 export function App() {
 	return (
-		<div className='flex h-screen items-center justify-center'>
-			<Button
-				type='button'
-				onClick={() => {
-					toast.add({ title: 'Test toast' })
-				}}
-			>
-				Test toast
-			</Button>
+		<ThemeProvider defaultTheme='system' storageKey='hidden-leads-theme'>
 			<Toaster />
-		</div>
+			<HomePage />
+		</ThemeProvider>
 	)
 }

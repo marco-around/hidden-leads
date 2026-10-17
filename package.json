@@ -12,6 +12,7 @@
 		"dev": "vite",
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
+		"format": "prettier --write .",
 		"preview": "vite preview",
 		"test": "vitest",
 		"test:run": "vitest run",
