@@ -43,6 +43,8 @@ Execute as validações pertinentes antes de finalizar qualquer alteração:
 
 6. **Convenções**
    - Escrever componentes react sempre em kebab-case.
+   - Nunca escrever arrow functions `const x = () => {}`.
+   - Nunca abreviar parametros. Errado: `files.map((f) => ...)` Certo: `files.map((file) => ...)`.
 
 ## 4. Documentação
 

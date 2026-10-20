@@ -1,17 +1,17 @@
 /* eslint-disable react-refresh/only-export-components */
-import * as React from 'react'
 import { Toast as ToastPrimitive } from '@base-ui/react/toast'
-import { cn } from 'cn'
-
-import { Button } from '@/components/ui/button'
 import {
-	XIcon,
 	CheckCircleIcon,
 	InfoIcon,
+	SpinnerIcon,
 	WarningIcon,
 	XCircleIcon,
-	SpinnerIcon,
+	XIcon,
 } from '@phosphor-icons/react'
+import { cn } from 'cn'
+import * as React from 'react'
+
+import { Button } from '@/components/ui/button'
 
 const toast = ToastPrimitive.createToastManager()
 
@@ -212,17 +212,17 @@ const createToastManager = ToastPrimitive.createToastManager
 const useToastManager = ToastPrimitive.useToastManager
 
 export {
-	Toaster,
+	createToastManager,
 	Toast,
+	toast,
 	ToastAction,
 	ToastClose,
 	ToastContent,
 	ToastDescription,
+	Toaster,
 	ToastPortal,
 	ToastProvider,
 	ToastTitle,
 	ToastViewport,
-	createToastManager,
-	toast,
 	useToastManager,
 }

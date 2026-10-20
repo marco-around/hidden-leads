@@ -1,5 +1,5 @@
-import * as React from 'react'
 import { cn } from 'cn'
+import * as React from 'react'
 
 function Card({
 	className,
@@ -11,7 +11,7 @@ function Card({
 			data-slot='card'
 			data-size={size}
 			className={cn(
-				'group/card bg-card text-card-foreground ring-foreground/10 flex flex-col gap-(--card-spacing) overflow-hidden rounded-lg py-(--card-spacing) text-xs/relaxed ring-1 [--card-spacing:--spacing(4)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] *:[img:first-child]:rounded-t-lg *:[img:last-child]:rounded-b-lg',
+				'group/card bg-card text-card-foreground ring-foreground/10 flex flex-col gap-(--card-spacing) overflow-hidden rounded-lg py-(--card-spacing) text-xs/relaxed shadow-lg ring-1 [--card-spacing:--spacing(4)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] dark:shadow-none *:[img:first-child]:rounded-t-lg *:[img:last-child]:rounded-b-lg',
 				className
 			)}
 			{...props}
@@ -90,10 +90,10 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
 
 export {
 	Card,
-	CardHeader,
-	CardFooter,
-	CardTitle,
 	CardAction,
-	CardDescription,
 	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
 }

@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
@@ -7,7 +9,6 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useState } from 'react'
 
 export function LanguageToggle() {
 	const [language, setLanguage] = useState<'PT' | 'EN'>('EN')

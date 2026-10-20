@@ -1,6 +1,6 @@
-import * as React from 'react'
 import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer'
 import { cn } from 'cn'
+import * as React from 'react'
 
 type DrawerContextProps = {
 	hasSnapPoints: boolean
@@ -215,14 +215,14 @@ function DrawerDescription({
 
 export {
 	Drawer,
-	DrawerPortal,
-	DrawerOverlay,
-	DrawerSwipeHandle,
-	DrawerTrigger,
 	DrawerClose,
 	DrawerContent,
-	DrawerHeader,
-	DrawerFooter,
-	DrawerTitle,
 	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerOverlay,
+	DrawerPortal,
+	DrawerSwipeHandle,
+	DrawerTitle,
+	DrawerTrigger,
 }
