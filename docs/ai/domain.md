@@ -66,7 +66,7 @@
 - **Recebimento de arquivos:** O sistema aceita arquivos estruturados (CSV, XML, JSON) enviados pelo usuário.
 - **Conversão para JSON:** Todo arquivo importado é convertido internamente para um formato JSON único e padronizado antes de ser salvo no IndexedDB.
 - **Deduplicação:** Na importação, registros repetidos são identificados (por combinação de nome, telefone ou documento/identificador) para evitar leads duplicados na base.
-- **Padronização de telefones:** Os números de telefone são normalizados para o padrão brasileiro por padrão, identificando automaticamente números de celular para gerar o link direto de WhatsApp.
+- **Padronização de telefones:** Os números de telefone são normalizados internacionalmente com suporte a múltiplos países e formatos, identificando automaticamente números móveis para gerar o link direto de WhatsApp.
 - **Indicador de qualidade da lista:** Após importar, o sistema exibe o total de leads carregados e o percentual de registros que possuem telefone, WhatsApp e site preenchidos.
 
 ### 5.2. Listagem, Filtros e Pontuação (Score)

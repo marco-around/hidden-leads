@@ -1,4 +1,4 @@
-import { FileIcon, UploadIcon, XIcon } from '@phosphor-icons/react'
+import { FileTextIcon, UploadIcon, XIcon } from '@phosphor-icons/react'
 import type { ComponentProps } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -60,7 +60,7 @@ export function FileUpload({
 			{files.length > 0 ? (
 				<div className='flex w-full flex-col items-center gap-2'>
 					<div className='flex size-10 items-center justify-center rounded-full border'>
-						<FileIcon className='size-4' />
+						<FileTextIcon className='size-4' />
 					</div>
 
 					{files.length === 1 ? (
