@@ -46,4 +46,28 @@ export interface ListQualityMetrics {
 	withWebsitePercentage: number
 	withoutWebsiteCount: number
 	withoutWebsitePercentage: number
+	possibleIndividualsCount: number
+	possibleIndividualsPercentage: number
+	completeDataCount: number
+	completeDataPercentage: number
+}
+
+export type WebsiteFilterOption = 'all' | 'with' | 'without'
+
+export interface LeadFilterCriteria {
+	query: string
+	whatsappOnly: boolean
+	withPhoneOnly: boolean
+	website: WebsiteFilterOption
+	category: string | null
+	status: LeadFunnelStatus | null
+}
+
+export const DEFAULT_LEAD_FILTER_CRITERIA: LeadFilterCriteria = {
+	query: '',
+	whatsappOnly: false,
+	withPhoneOnly: false,
+	website: 'all',
+	category: null,
+	status: null,
 }

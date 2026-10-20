@@ -1,8 +1,10 @@
 import {
+	ArrowCounterClockwiseIcon,
 	ArrowSquareOutIcon,
 	CaretLeftIcon,
 	CaretRightIcon,
 	EyeIcon,
+	FunnelSimpleIcon,
 	GlobeIcon,
 	PhoneIcon,
 	UserIcon,
@@ -61,18 +63,30 @@ export function LeadTable({
 	leads,
 	onSelectLead,
 	selectedLeadId,
-	pageSize = 20,
+	pageSize = 10,
 	className,
 	...props
 }: LeadTableProps) {
 	const leadsContext = useContext(LeadsContext)
-	const activeLeads = leads ?? leadsContext?.leads ?? []
+	const activeLeads =
+		leads ?? leadsContext?.filteredLeads ?? leadsContext?.leads ?? []
+	const totalLeadsCount =
+		leads?.length ?? leadsContext?.leads.length ?? activeLeads.length
+	const hasActiveFilters = leadsContext?.hasActiveFilters ?? false
 	const activeSelectedLeadId =
 		selectedLeadId !== undefined
 			? selectedLeadId
 			: (leadsContext?.selectedLead?.id ?? null)
 
 	const [currentPage, setCurrentPage] = useState<number>(1)
+	const [previousFilters, setPreviousFilters] = useState(leadsContext?.filters)
+	const [previousLeads, setPreviousLeads] = useState(leads)
+
+	if (leadsContext?.filters !== previousFilters || leads !== previousLeads) {
+		setPreviousFilters(leadsContext?.filters)
+		setPreviousLeads(leads)
+		setCurrentPage(1)
+	}
 
 	const totalPages =
 		pageSize > 0 ? Math.max(1, Math.ceil(activeLeads.length / pageSize)) : 1
@@ -96,6 +110,12 @@ export function LeadTable({
 		}
 	}
 
+	function handleResetFilters() {
+		if (leadsContext) {
+			leadsContext.resetFilters()
+		}
+	}
+
 	return (
 		<div
 			className={cn(
@@ -108,21 +128,43 @@ export function LeadTable({
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead className='min-w-[220px]'>Company / Name</TableHead>
-						<TableHead className='min-w-[150px]'>Category</TableHead>
-						<TableHead className='min-w-[170px]'>Phone & WhatsApp</TableHead>
-						<TableHead className='min-w-[180px]'>Website</TableHead>
-						<TableHead className='w-[110px] text-right'>Actions</TableHead>
+						<TableHead className='min-w-55'>Company / Name</TableHead>
+						<TableHead className='min-w-37.5'>Category</TableHead>
+						<TableHead className='min-w-42.5'>Phone & WhatsApp</TableHead>
+						<TableHead className='min-w-45'>Website</TableHead>
+						<TableHead className='w-27.5 text-right'>Actions</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
 					{paginatedLeads.length === 0 ? (
 						<TableRow>
-							<TableCell
-								colSpan={5}
-								className='text-muted-foreground h-32 text-center'
-							>
-								No leads available to display.
+							<TableCell colSpan={5} className='h-48 text-center'>
+								{hasActiveFilters ? (
+									<div className='flex flex-col items-center justify-center gap-2 py-6'>
+										<FunnelSimpleIcon className='text-muted-foreground size-8 opacity-40' />
+										<p className='text-foreground text-sm font-semibold'>
+											No leads match your filters
+										</p>
+										<p className='text-muted-foreground max-w-sm text-xs'>
+											No leads matched your current filter criteria. Try
+											adjusting your search query or quick filters.
+										</p>
+										<Button
+											variant='outline'
+											size='sm'
+											className='mt-2'
+											onClick={handleResetFilters}
+											type='button'
+										>
+											<ArrowCounterClockwiseIcon className='size-3.5' />
+											<span>Clear filters</span>
+										</Button>
+									</div>
+								) : (
+									<span className='text-muted-foreground'>
+										No leads available to display.
+									</span>
+								)}
 							</TableCell>
 						</TableRow>
 					) : (
@@ -169,7 +211,7 @@ export function LeadTable({
 									<TableCell>
 										{lead.metadata.category ? (
 											<span
-												className='bg-secondary text-secondary-foreground inline-flex max-w-[160px] truncate rounded-md px-2 py-0.5 text-xs font-medium'
+												className='bg-secondary text-secondary-foreground inline-flex max-w-40 truncate rounded-md px-2 py-0.5 text-xs font-medium'
 												title={lead.metadata.category}
 											>
 												{lead.metadata.category}
@@ -220,7 +262,7 @@ export function LeadTable({
 												href={lead.contact.website}
 												target='_blank'
 												rel='noopener noreferrer'
-												className='text-primary inline-flex max-w-[180px] items-center gap-1 font-medium hover:underline'
+												className='text-primary inline-flex max-w-45 items-center gap-1 font-medium hover:underline'
 												title={lead.contact.website}
 												onClick={function (event) {
 													event.stopPropagation()
@@ -274,10 +316,24 @@ export function LeadTable({
 						</span>{' '}
 						to <span className='text-foreground font-medium'>{endIndex}</span>{' '}
 						of{' '}
-						<span className='text-foreground font-medium'>
-							{activeLeads.length}
-						</span>{' '}
-						leads
+						{hasActiveFilters && activeLeads.length !== totalLeadsCount ? (
+							<>
+								<span className='text-primary font-semibold'>
+									{activeLeads.length}
+								</span>{' '}
+								matching leads{' '}
+								<span className='text-muted-foreground font-normal'>
+									({totalLeadsCount} total)
+								</span>
+							</>
+						) : (
+							<>
+								<span className='text-foreground font-medium'>
+									{activeLeads.length}
+								</span>{' '}
+								leads
+							</>
+						)}
 					</span>
 
 					{totalPages > 1 && (

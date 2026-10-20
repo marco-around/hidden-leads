@@ -7,8 +7,10 @@ import {
 	useState,
 } from 'react'
 
-import type { Lead, ListQualityMetrics } from '@/types/lead'
+import type { Lead, LeadFilterCriteria, ListQualityMetrics } from '@/types/lead'
+import { DEFAULT_LEAD_FILTER_CRITERIA } from '@/types/lead'
 import { parseCsvFileToLeads } from '@/utils/csv-parser'
+import { countActiveFilters, filterLeads } from '@/utils/lead-filter'
 import { calculateListQualityMetrics } from '@/utils/metrics-calculator'
 
 export interface ImportFilesOptions {
@@ -23,10 +25,25 @@ export interface UseLeadsOptions {
 
 export interface UseLeadsReturn {
 	leads: Lead[]
+	filteredLeads: Lead[]
 	metrics: ListQualityMetrics
 	selectedLead: Lead | null
 	isLoading: boolean
 	error: string | null
+	filters: LeadFilterCriteria
+	activeFiltersCount: number
+	hasActiveFilters: boolean
+	availableCategories: string[]
+	setFilters: (
+		criteriaOrUpdater:
+			| LeadFilterCriteria
+			| ((previousCriteria: LeadFilterCriteria) => LeadFilterCriteria)
+	) => void
+	updateFilter: <Key extends keyof LeadFilterCriteria>(
+		key: Key,
+		value: LeadFilterCriteria[Key]
+	) => void
+	resetFilters: () => void
 	importFiles: (
 		files: readonly File[] | FileList,
 		options?: ImportFilesOptions
@@ -123,6 +140,9 @@ export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
 	const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
 	const [isLoading, setIsLoading] = useState<boolean>(false)
 	const [error, setError] = useState<string | null>(null)
+	const [filters, setFiltersState] = useState<LeadFilterCriteria>(
+		DEFAULT_LEAD_FILTER_CRITERIA
+	)
 
 	const metrics = useMemo(
 		function () {
@@ -130,6 +150,66 @@ export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
 		},
 		[leads]
 	)
+
+	const filteredLeads = useMemo(
+		function () {
+			return filterLeads(leads, filters)
+		},
+		[leads, filters]
+	)
+
+	const activeFiltersCount = useMemo(
+		function () {
+			return countActiveFilters(filters)
+		},
+		[filters]
+	)
+
+	const hasActiveFilters = activeFiltersCount > 0
+
+	const availableCategories = useMemo(
+		function () {
+			const categorySet = new Set<string>()
+			for (const lead of leads) {
+				if (
+					lead.metadata.category &&
+					lead.metadata.category.trim().length > 0
+				) {
+					categorySet.add(lead.metadata.category.trim())
+				}
+			}
+			return Array.from(categorySet).sort(
+				function (firstCategory, secondCategory) {
+					return firstCategory.localeCompare(secondCategory)
+				}
+			)
+		},
+		[leads]
+	)
+
+	function setFilters(
+		criteriaOrUpdater:
+			| LeadFilterCriteria
+			| ((previousCriteria: LeadFilterCriteria) => LeadFilterCriteria)
+	) {
+		setFiltersState(criteriaOrUpdater)
+	}
+
+	function updateFilter<Key extends keyof LeadFilterCriteria>(
+		key: Key,
+		value: LeadFilterCriteria[Key]
+	) {
+		setFiltersState(function (previousCriteria) {
+			return {
+				...previousCriteria,
+				[key]: value,
+			}
+		})
+	}
+
+	function resetFilters() {
+		setFiltersState(DEFAULT_LEAD_FILTER_CRITERIA)
+	}
 
 	function setLeads(nextLeads: Lead[]) {
 		setLeadsState(nextLeads)
@@ -148,6 +228,7 @@ export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
 		setLeadsState([])
 		setSelectedLead(null)
 		setError(null)
+		resetFilters()
 	}
 
 	function clearError() {
@@ -235,10 +316,18 @@ export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
 
 	return {
 		leads,
+		filteredLeads,
 		metrics,
 		selectedLead,
 		isLoading,
 		error,
+		filters,
+		activeFiltersCount,
+		hasActiveFilters,
+		availableCategories,
+		setFilters,
+		updateFilter,
+		resetFilters,
 		importFiles,
 		clearLeads,
 		selectLead,

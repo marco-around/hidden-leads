@@ -11,11 +11,13 @@ import { useState } from 'react'
 
 import { FileUpload } from '@/components/file-upload'
 import { LeadDetailsDialog } from '@/components/lead-details-dialog'
+import { LeadFilters } from '@/components/lead-filters'
 import { LeadMetrics } from '@/components/lead-metrics'
 import { LeadTable } from '@/components/lead-table'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
+	CardAction,
 	CardContent,
 	CardDescription,
 	CardHeader,
@@ -25,8 +27,16 @@ import { toast } from '@/components/ui/toast'
 import { LeadsProvider, useLeadsContext } from '@/hooks/use-leads'
 
 function HomeMainContent() {
-	const { leads, isLoading, error, importFiles, clearLeads, clearError } =
-		useLeadsContext()
+	const {
+		leads,
+		filteredLeads,
+		hasActiveFilters,
+		isLoading,
+		error,
+		importFiles,
+		clearLeads,
+		clearError,
+	} = useLeadsContext()
 
 	const [files, setFiles] = useState<File[]>([])
 	const [activeView, setActiveView] = useState<'upload' | 'leads'>('upload')
@@ -128,11 +138,15 @@ function HomeMainContent() {
 
 				<LeadMetrics />
 
+				<LeadFilters />
+
 				<div className='bg-card text-card-foreground flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 shadow-xs'>
 					<div className='flex items-center gap-2'>
 						<span className='text-sm font-semibold'>Leads Directory</span>
 						<span className='bg-secondary text-secondary-foreground rounded-full px-2 py-0.5 text-xs font-medium'>
-							{leads.length} {leads.length === 1 ? 'record' : 'records'}
+							{hasActiveFilters
+								? `${filteredLeads.length} of ${leads.length} ${leads.length === 1 ? 'record' : 'records'}`
+								: `${leads.length} ${leads.length === 1 ? 'record' : 'records'}`}
 						</span>
 					</div>
 
@@ -175,24 +189,24 @@ function HomeMainContent() {
 			<Card className='w-full max-w-md'>
 				<CardHeader>
 					{hasExistingLeads ? (
-						<div className='flex items-start justify-between gap-2'>
-							<div>
-								<CardTitle>Add more leads</CardTitle>
-								<CardDescription className='mt-1'>
-									Upload additional CSV files. Duplicate leads will be merged
-									automatically.
-								</CardDescription>
-							</div>
-							<Button
-								variant='ghost'
-								size='sm'
-								onClick={handleReturnToLeads}
-								type='button'
-							>
-								<ArrowLeftIcon className='size-3.5' />
-								<span>Back to leads</span>
-							</Button>
-						</div>
+						<>
+							<CardTitle>Add more leads</CardTitle>
+							<CardDescription className='mt-1'>
+								Upload additional CSV files. Duplicate leads will be merged
+								automatically.
+							</CardDescription>
+							<CardAction>
+								<Button
+									variant='outline'
+									size='sm'
+									onClick={handleReturnToLeads}
+									type='button'
+								>
+									<ArrowLeftIcon className='size-3.5' />
+									<span>Back to leads</span>
+								</Button>
+							</CardAction>
+						</>
 					) : (
 						<div>
 							<CardTitle>Your leads here!</CardTitle>

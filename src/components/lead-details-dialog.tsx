@@ -345,7 +345,7 @@ export function LeadDetailsDialog({
 											href={activeLead.contact.website}
 											target='_blank'
 											rel='noopener noreferrer'
-											className='text-primary inline-flex max-w-[170px] items-center gap-1 truncate font-medium hover:underline'
+											className='text-primary inline-flex max-w-42.5 items-center gap-1 truncate font-medium hover:underline'
 										>
 											<span>
 												{cleanWebsiteDisplay(activeLead.contact.website)}

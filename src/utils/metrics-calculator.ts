@@ -19,6 +19,10 @@ function createEmptyQualityMetrics(): ListQualityMetrics {
 		withWebsitePercentage: 0,
 		withoutWebsiteCount: 0,
 		withoutWebsitePercentage: 0,
+		possibleIndividualsCount: 0,
+		possibleIndividualsPercentage: 0,
+		completeDataCount: 0,
+		completeDataPercentage: 0,
 	}
 }
 
@@ -34,16 +38,29 @@ export function calculateListQualityMetrics(
 	let withPhoneCount = 0
 	let withWhatsappCount = 0
 	let withWebsiteCount = 0
+	let possibleIndividualsCount = 0
+	let completeDataCount = 0
 
 	for (const lead of leads) {
-		if (lead.contact.phone !== null && lead.contact.phone.trim().length > 0) {
+		const hasPhone =
+			lead.contact.phone !== null && lead.contact.phone.trim().length > 0
+		const hasWhatsapp = lead.contact.hasWhatsapp
+		const hasWebsite = lead.contact.hasWebsite
+
+		if (hasPhone) {
 			withPhoneCount += 1
 		}
-		if (lead.contact.hasWhatsapp) {
+		if (hasWhatsapp) {
 			withWhatsappCount += 1
 		}
-		if (lead.contact.hasWebsite) {
+		if (hasWebsite) {
 			withWebsiteCount += 1
+		}
+		if (lead.metadata.isPossibleIndividual) {
+			possibleIndividualsCount += 1
+		}
+		if (hasPhone && hasWhatsapp && hasWebsite) {
+			completeDataCount += 1
 		}
 	}
 
@@ -62,6 +79,13 @@ export function calculateListQualityMetrics(
 			withoutWebsiteCount,
 			totalLeads
 		),
+		possibleIndividualsCount,
+		possibleIndividualsPercentage: calculatePercentage(
+			possibleIndividualsCount,
+			totalLeads
+		),
+		completeDataCount,
+		completeDataPercentage: calculatePercentage(completeDataCount, totalLeads),
 	}
 }
 
