@@ -1,3 +1,5 @@
+import type { UpdateSpec } from 'dexie'
+import { useLiveQuery } from 'dexie-react-hooks'
 import type { ReactNode } from 'react'
 import {
 	createContext,
@@ -7,11 +9,14 @@ import {
 	useState,
 } from 'react'
 
+import { db } from '@/db'
 import type { Lead, LeadFilterCriteria, ListQualityMetrics } from '@/types/lead'
 import { DEFAULT_LEAD_FILTER_CRITERIA } from '@/types/lead'
 import { parseCsvFileToLeads } from '@/utils/csv-parser'
 import { countActiveFilters, filterLeads } from '@/utils/lead-filter'
 import { calculateListQualityMetrics } from '@/utils/metrics-calculator'
+
+export type { UpdateSpec }
 
 export interface ImportFilesOptions {
 	append?: boolean
@@ -29,6 +34,7 @@ export interface UseLeadsReturn {
 	metrics: ListQualityMetrics
 	selectedLead: Lead | null
 	isLoading: boolean
+	isInitialLoading: boolean
 	error: string | null
 	filters: LeadFilterCriteria
 	activeFiltersCount: number
@@ -48,10 +54,12 @@ export interface UseLeadsReturn {
 		files: readonly File[] | FileList,
 		options?: ImportFilesOptions
 	) => Promise<Lead[]>
-	clearLeads: () => void
+	clearLeads: () => Promise<void>
+	updateLead: (id: string, changes: UpdateSpec<Lead>) => Promise<number>
+	deleteLead: (id: string) => Promise<void>
 	selectLead: (leadOrId: Lead | string | null) => void
 	clearError: () => void
-	setLeads: (leads: Lead[]) => void
+	setLeads: (leads: Lead[]) => Promise<void>
 	setSelectedLead: (lead: Lead | null) => void
 }
 
@@ -134,14 +142,38 @@ function isCsvFile(file: File): boolean {
 }
 
 export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
-	const [leads, setLeadsState] = useState<Lead[]>(function () {
-		return options?.initialLeads ?? []
-	})
-	const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+	const liveLeads = useLiveQuery(function () {
+		return db.leads.toArray()
+	}, [])
+
+	const isInitialLoading = liveLeads === undefined
+	const leads = useMemo(
+		function () {
+			return liveLeads ?? options?.initialLeads ?? []
+		},
+		[liveLeads, options?.initialLeads]
+	)
+
+	const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
 	const [isLoading, setIsLoading] = useState<boolean>(false)
 	const [error, setError] = useState<string | null>(null)
 	const [filters, setFiltersState] = useState<LeadFilterCriteria>(
 		DEFAULT_LEAD_FILTER_CRITERIA
+	)
+
+	const selectedLead = useMemo(
+		function () {
+			if (selectedLeadId === null) {
+				return null
+			}
+
+			const matchingLead = leads.find(function (lead) {
+				return lead.id === selectedLeadId
+			})
+
+			return matchingLead ?? null
+		},
+		[leads, selectedLeadId]
 	)
 
 	const metrics = useMemo(
@@ -211,45 +243,122 @@ export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
 		setFiltersState(DEFAULT_LEAD_FILTER_CRITERIA)
 	}
 
-	function setLeads(nextLeads: Lead[]) {
-		setLeadsState(nextLeads)
-		setSelectedLead(function (currentSelectedLead) {
-			if (!currentSelectedLead) {
-				return null
-			}
-			const existsInNextLeads = nextLeads.some(function (lead) {
-				return lead.id === currentSelectedLead.id
-			})
-			return existsInNextLeads ? currentSelectedLead : null
-		})
+	function selectLead(leadOrId: Lead | string | null) {
+		if (leadOrId === null) {
+			setSelectedLeadId(null)
+			return
+		}
+
+		if (typeof leadOrId === 'string') {
+			setSelectedLeadId(leadOrId)
+			return
+		}
+
+		setSelectedLeadId(leadOrId.id)
 	}
 
-	function clearLeads() {
-		setLeadsState([])
-		setSelectedLead(null)
-		setError(null)
-		resetFilters()
+	function setSelectedLead(lead: Lead | null) {
+		setSelectedLeadId(lead !== null ? lead.id : null)
 	}
 
 	function clearError() {
 		setError(null)
 	}
 
-	function selectLead(leadOrId: Lead | string | null) {
-		if (leadOrId === null) {
-			setSelectedLead(null)
-			return
-		}
+	async function clearLeads(): Promise<void> {
+		setError(null)
 
-		if (typeof leadOrId === 'string') {
-			const foundLead = leads.find(function (lead) {
-				return lead.id === leadOrId
-			})
-			setSelectedLead(foundLead ?? null)
-			return
-		}
+		try {
+			await db.leads.clear()
+			setSelectedLeadId(null)
+			resetFilters()
+		} catch (clearError: unknown) {
+			const message =
+				clearError instanceof Error
+					? clearError.message
+					: 'An unexpected error occurred while clearing leads.'
 
-		setSelectedLead(leadOrId)
+			setError(message)
+
+			const normalizedError =
+				clearError instanceof Error
+					? clearError
+					: new Error(message, { cause: clearError })
+
+			throw normalizedError
+		}
+	}
+
+	async function updateLead(
+		id: string,
+		changes: UpdateSpec<Lead>
+	): Promise<number> {
+		try {
+			const updatedCount = await db.leads.update(id, changes)
+			return updatedCount
+		} catch (updateError: unknown) {
+			const message =
+				updateError instanceof Error
+					? updateError.message
+					: `An unexpected error occurred while updating lead with ID "${id}".`
+
+			setError(message)
+
+			const normalizedError =
+				updateError instanceof Error
+					? updateError
+					: new Error(message, { cause: updateError })
+
+			throw normalizedError
+		}
+	}
+
+	async function deleteLead(id: string): Promise<void> {
+		try {
+			await db.leads.delete(id)
+			if (selectedLeadId === id) {
+				setSelectedLeadId(null)
+			}
+		} catch (deleteError: unknown) {
+			const message =
+				deleteError instanceof Error
+					? deleteError.message
+					: `An unexpected error occurred while deleting lead with ID "${id}".`
+
+			setError(message)
+
+			const normalizedError =
+				deleteError instanceof Error
+					? deleteError
+					: new Error(message, { cause: deleteError })
+
+			throw normalizedError
+		}
+	}
+
+	async function setLeads(nextLeads: Lead[]): Promise<void> {
+		setError(null)
+
+		try {
+			await db.leads.clear()
+			if (nextLeads.length > 0) {
+				await db.leads.bulkAdd(nextLeads)
+			}
+		} catch (setLeadsError: unknown) {
+			const message =
+				setLeadsError instanceof Error
+					? setLeadsError.message
+					: 'An unexpected error occurred while setting leads.'
+
+			setError(message)
+
+			const normalizedError =
+				setLeadsError instanceof Error
+					? setLeadsError
+					: new Error(message, { cause: setLeadsError })
+
+			throw normalizedError
+		}
 	}
 
 	async function importFiles(
@@ -285,14 +394,54 @@ export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
 			}
 
 			const shouldAppend = importOptions?.append ?? false
-			const finalLeads = shouldAppend
-				? mergeLeads(leads, allIncomingLeads)
-				: allIncomingLeads
+			if (shouldAppend) {
+				const existingLeads = await db.leads.toArray()
+				const seenKeys = new Set<string>()
+				for (const lead of existingLeads) {
+					const keys = getLeadDeduplicationKeys(lead)
+					for (const key of keys) {
+						seenKeys.add(key)
+					}
+				}
 
-			setLeads(finalLeads)
-			options?.onImportSuccess?.(finalLeads)
+				const newLeadsToPersist: Lead[] = []
+				for (const incomingLead of allIncomingLeads) {
+					const keys = getLeadDeduplicationKeys(incomingLead)
+					const isDuplicate = keys.some(function (key) {
+						return seenKeys.has(key)
+					})
 
-			return finalLeads
+					if (isDuplicate) {
+						continue
+					}
+
+					for (const key of keys) {
+						seenKeys.add(key)
+					}
+
+					newLeadsToPersist.push(incomingLead)
+				}
+
+				if (newLeadsToPersist.length > 0) {
+					await db.leads.bulkAdd(newLeadsToPersist)
+				}
+
+				const finalLeads = [...existingLeads, ...newLeadsToPersist]
+				options?.onImportSuccess?.(finalLeads)
+
+				return finalLeads
+			}
+
+			await db.leads.clear()
+			setSelectedLeadId(null)
+
+			if (allIncomingLeads.length > 0) {
+				await db.leads.bulkAdd(allIncomingLeads)
+			}
+
+			options?.onImportSuccess?.(allIncomingLeads)
+
+			return allIncomingLeads
 		} catch (importError: unknown) {
 			const message =
 				importError instanceof Error
@@ -320,6 +469,7 @@ export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
 		metrics,
 		selectedLead,
 		isLoading,
+		isInitialLoading,
 		error,
 		filters,
 		activeFiltersCount,
@@ -330,6 +480,8 @@ export function useLeads(options?: UseLeadsOptions): UseLeadsReturn {
 		resetFilters,
 		importFiles,
 		clearLeads,
+		updateLead,
+		deleteLead,
 		selectLead,
 		clearError,
 		setLeads,

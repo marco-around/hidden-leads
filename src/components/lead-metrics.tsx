@@ -1,9 +1,5 @@
 import {
-	GlobeSimpleIcon,
 	GlobeSimpleXIcon,
-	PhoneIcon,
-	SealCheckIcon,
-	ShieldWarningIcon,
 	UsersIcon,
 	WhatsappLogoIcon,
 } from '@phosphor-icons/react'
@@ -51,20 +47,12 @@ export function LeadMetrics({
 	const activeMetrics = metrics ?? leadsContext?.metrics ?? fallbackMetrics
 
 	const isWhatsappActive = leadsContext?.filters.whatsappOnly ?? false
-	const isWithPhoneActive = leadsContext?.filters.withPhoneOnly ?? false
 	const isWithoutWebsiteActive = leadsContext?.filters.website === 'without'
-	const isWithWebsiteActive = leadsContext?.filters.website === 'with'
 	const hasActiveFilters = leadsContext?.hasActiveFilters ?? false
 
 	function handleToggleWhatsapp() {
 		if (leadsContext) {
 			leadsContext.updateFilter('whatsappOnly', !isWhatsappActive)
-		}
-	}
-
-	function handleToggleWithPhone() {
-		if (leadsContext) {
-			leadsContext.updateFilter('withPhoneOnly', !isWithPhoneActive)
 		}
 	}
 
@@ -74,12 +62,6 @@ export function LeadMetrics({
 				'website',
 				isWithoutWebsiteActive ? 'all' : 'without'
 			)
-		}
-	}
-
-	function handleToggleWithWebsite() {
-		if (leadsContext) {
-			leadsContext.updateFilter('website', isWithWebsiteActive ? 'all' : 'with')
 		}
 	}
 
@@ -100,10 +82,7 @@ export function LeadMetrics({
 
 	return (
 		<div
-			className={cn(
-				'grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4',
-				className
-			)}
+			className={cn('grid grid-cols-1 gap-3 md:grid-cols-3', className)}
 			data-slot='lead-metrics'
 			{...props}
 		>
@@ -141,33 +120,6 @@ export function LeadMetrics({
 					</div>
 					<CardDescription className='text-xs'>
 						{hasActiveFilters ? 'Click to reset filters' : 'Imported records'}
-					</CardDescription>
-				</CardContent>
-			</Card>
-
-			<Card size='sm'>
-				<CardHeader>
-					<CardTitle className='text-muted-foreground text-xs font-medium'>
-						Complete Contact
-					</CardTitle>
-					<CardAction>
-						<SealCheckIcon
-							className='size-4 text-emerald-600 dark:text-emerald-400'
-							weight='fill'
-						/>
-					</CardAction>
-				</CardHeader>
-				<CardContent className='flex flex-col gap-1'>
-					<div className='flex items-baseline justify-between gap-2'>
-						<span className='text-2xl font-bold tracking-tight'>
-							{activeMetrics.completeDataCount.toLocaleString()}
-						</span>
-						<span className='rounded bg-emerald-500/10 px-1.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400'>
-							{activeMetrics.completeDataPercentage}%
-						</span>
-					</div>
-					<CardDescription className='text-xs'>
-						Phone, WhatsApp & website
 					</CardDescription>
 				</CardContent>
 			</Card>
@@ -222,52 +174,6 @@ export function LeadMetrics({
 				size='sm'
 				role='button'
 				tabIndex={0}
-				aria-pressed={isWithWebsiteActive}
-				onClick={handleToggleWithWebsite}
-				onKeyDown={createKeyHandler(handleToggleWithWebsite)}
-				title={
-					isWithWebsiteActive
-						? 'Active filter. Click to remove filter.'
-						: 'Click to filter leads with website'
-				}
-				className={cn(
-					'cursor-pointer transition-all hover:ring-2 hover:ring-sky-500/40',
-					isWithWebsiteActive &&
-						'border-sky-500/40 bg-sky-500/5 ring-2 ring-sky-500/50 dark:bg-sky-500/10'
-				)}
-			>
-				<CardHeader>
-					<CardTitle className='text-muted-foreground text-xs font-medium'>
-						With Website
-					</CardTitle>
-					<CardAction>
-						<GlobeSimpleIcon
-							className='size-4 text-sky-600 dark:text-sky-400'
-							weight='bold'
-						/>
-					</CardAction>
-				</CardHeader>
-				<CardContent className='flex flex-col gap-1'>
-					<div className='flex items-baseline justify-between gap-2'>
-						<span className='text-2xl font-bold tracking-tight'>
-							{activeMetrics.withWebsiteCount.toLocaleString()}
-						</span>
-						<span className='rounded bg-sky-500/10 px-1.5 py-0.5 text-xs font-medium text-sky-600 dark:text-sky-400'>
-							{activeMetrics.withWebsitePercentage}%
-						</span>
-					</div>
-					<CardDescription className='text-xs'>
-						{isWithWebsiteActive
-							? 'Filter active (click to clear)'
-							: 'Active digital presence'}
-					</CardDescription>
-				</CardContent>
-			</Card>
-
-			<Card
-				size='sm'
-				role='button'
-				tabIndex={0}
 				aria-pressed={isWithoutWebsiteActive}
 				onClick={handleToggleWithoutWebsite}
 				onKeyDown={createKeyHandler(handleToggleWithoutWebsite)}
@@ -306,79 +212,6 @@ export function LeadMetrics({
 						{isWithoutWebsiteActive
 							? 'Filter active (click to clear)'
 							: 'Prospecting opportunity'}
-					</CardDescription>
-				</CardContent>
-			</Card>
-
-			<Card
-				size='sm'
-				role='button'
-				tabIndex={0}
-				aria-pressed={isWithPhoneActive}
-				onClick={handleToggleWithPhone}
-				onKeyDown={createKeyHandler(handleToggleWithPhone)}
-				title={
-					isWithPhoneActive
-						? 'Active filter. Click to remove filter.'
-						: 'Click to filter leads with phone'
-				}
-				className={cn(
-					'cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/40',
-					isWithPhoneActive &&
-						'border-blue-500/40 bg-blue-500/5 ring-2 ring-blue-500/50 dark:bg-blue-500/10'
-				)}
-			>
-				<CardHeader>
-					<CardTitle className='text-muted-foreground text-xs font-medium'>
-						With Phone
-					</CardTitle>
-					<CardAction>
-						<PhoneIcon
-							className='size-4 text-blue-600 dark:text-blue-400'
-							weight='fill'
-						/>
-					</CardAction>
-				</CardHeader>
-				<CardContent className='flex flex-col gap-1'>
-					<div className='flex items-baseline justify-between gap-2'>
-						<span className='text-2xl font-bold tracking-tight'>
-							{activeMetrics.withPhoneCount.toLocaleString()}
-						</span>
-						<span className='rounded bg-blue-500/10 px-1.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400'>
-							{activeMetrics.withPhonePercentage}%
-						</span>
-					</div>
-					<CardDescription className='text-xs'>
-						{isWithPhoneActive
-							? 'Filter active (click to clear)'
-							: 'Validated phone numbers'}
-					</CardDescription>
-				</CardContent>
-			</Card>
-
-			<Card size='sm'>
-				<CardHeader>
-					<CardTitle className='text-muted-foreground text-xs font-medium'>
-						Possible Individuals
-					</CardTitle>
-					<CardAction>
-						<ShieldWarningIcon
-							className='size-4 text-rose-600 dark:text-rose-400'
-							weight='bold'
-						/>
-					</CardAction>
-				</CardHeader>
-				<CardContent className='flex flex-col gap-1'>
-					<div className='flex items-baseline justify-between gap-2'>
-						<span className='text-2xl font-bold tracking-tight'>
-							{activeMetrics.possibleIndividualsCount.toLocaleString()}
-						</span>
-						<span className='rounded bg-rose-500/10 px-1.5 py-0.5 text-xs font-medium text-rose-600 dark:text-rose-400'>
-							{activeMetrics.possibleIndividualsPercentage}%
-						</span>
-					</div>
-					<CardDescription className='text-xs'>
-						LGPD review recommended
 					</CardDescription>
 				</CardContent>
 			</Card>

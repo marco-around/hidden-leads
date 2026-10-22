@@ -32,6 +32,7 @@ function HomeMainContent() {
 		filteredLeads,
 		hasActiveFilters,
 		isLoading,
+		isInitialLoading,
 		error,
 		importFiles,
 		clearLeads,
@@ -39,7 +40,16 @@ function HomeMainContent() {
 	} = useLeadsContext()
 
 	const [files, setFiles] = useState<File[]>([])
-	const [activeView, setActiveView] = useState<'upload' | 'leads'>('upload')
+	const [viewOverride, setViewOverride] = useState<'upload' | 'leads' | null>(
+		null
+	)
+
+	const activeView: 'upload' | 'leads' =
+		leads.length === 0 ? 'upload' : (viewOverride ?? 'leads')
+
+	function setActiveView(view: 'upload' | 'leads') {
+		setViewOverride(view)
+	}
 
 	function handleFilesChange(newFiles: File[]) {
 		setFiles(newFiles)
@@ -79,16 +89,29 @@ function HomeMainContent() {
 		}
 	}
 
-	function handleClearLeads() {
-		clearLeads()
-		setFiles([])
-		setActiveView('upload')
+	async function handleClearLeads() {
+		try {
+			await clearLeads()
+			setFiles([])
+			setActiveView('upload')
 
-		toast.add({
-			type: 'info',
-			title: 'List cleared',
-			description: 'All loaded leads have been removed.',
-		})
+			toast.add({
+				type: 'info',
+				title: 'List cleared',
+				description: 'All loaded leads have been removed.',
+			})
+		} catch (clearError: unknown) {
+			const errorMessage =
+				clearError instanceof Error
+					? clearError.message
+					: 'An unexpected error occurred while clearing leads.'
+
+			toast.add({
+				type: 'error',
+				title: 'Clear failed',
+				description: errorMessage,
+			})
+		}
 	}
 
 	function handleNavigateToUpload() {
@@ -105,6 +128,27 @@ function HomeMainContent() {
 
 	function handleDismissError() {
 		clearError()
+	}
+
+	if (isInitialLoading) {
+		return (
+			<main
+				className='flex flex-1 items-center justify-center p-4'
+				aria-busy='true'
+				aria-live='polite'
+			>
+				<div
+					role='status'
+					className='text-muted-foreground flex flex-col items-center gap-3'
+				>
+					<SpinnerIcon
+						className='text-primary size-8 animate-spin'
+						aria-hidden='true'
+					/>
+					<p className='text-sm font-medium'>Loading leads...</p>
+				</div>
+			</main>
+		)
 	}
 
 	const isLeadsView = leads.length > 0 && activeView === 'leads'
@@ -138,8 +182,6 @@ function HomeMainContent() {
 
 				<LeadMetrics />
 
-				<LeadFilters />
-
 				<div className='bg-card text-card-foreground flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 shadow-xs'>
 					<div className='flex items-center gap-2'>
 						<span className='text-sm font-semibold'>Leads Directory</span>
@@ -172,6 +214,8 @@ function HomeMainContent() {
 						</Button>
 					</div>
 				</div>
+
+				<LeadFilters />
 
 				<div className='min-h-0 flex-1'>
 					<LeadTable />

@@ -1,8 +1,6 @@
 import {
 	ArrowCounterClockwiseIcon,
 	ArrowSquareOutIcon,
-	CaretLeftIcon,
-	CaretRightIcon,
 	EyeIcon,
 	FunnelSimpleIcon,
 	GlobeIcon,
@@ -14,6 +12,15 @@ import type { ComponentProps } from 'react'
 import { useContext, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import {
+	Pagination,
+	PaginationContent,
+	PaginationEllipsis,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from '@/components/ui/pagination'
 import {
 	Table,
 	TableBody,
@@ -59,6 +66,48 @@ function formatLeadLocation(location: Lead['location']): string | null {
 	return parts.join(', ')
 }
 
+function getPaginationItems(
+	currentPage: number,
+	totalPages: number
+): Array<number | 'ellipsis-start' | 'ellipsis-end'> {
+	if (totalPages <= 7) {
+		const pages: number[] = []
+		for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
+			pages.push(pageNumber)
+		}
+		return pages
+	}
+
+	const showLeftEllipsis = currentPage > 4
+	const showRightEllipsis = currentPage < totalPages - 3
+
+	if (!showLeftEllipsis && showRightEllipsis) {
+		return [1, 2, 3, 4, 5, 'ellipsis-end', totalPages]
+	}
+
+	if (showLeftEllipsis && !showRightEllipsis) {
+		return [
+			1,
+			'ellipsis-start',
+			totalPages - 4,
+			totalPages - 3,
+			totalPages - 2,
+			totalPages - 1,
+			totalPages,
+		]
+	}
+
+	return [
+		1,
+		'ellipsis-start',
+		currentPage - 1,
+		currentPage,
+		currentPage + 1,
+		'ellipsis-end',
+		totalPages,
+	]
+}
+
 export function LeadTable({
 	leads,
 	onSelectLead,
@@ -98,6 +147,7 @@ export function LeadTable({
 			: activeLeads.length
 	const paginatedLeads =
 		pageSize > 0 ? activeLeads.slice(startIndex, endIndex) : activeLeads
+	const paginationItems = getPaginationItems(effectivePage, totalPages)
 
 	function handleSelectLead(lead: Lead) {
 		if (onSelectLead) {
@@ -337,39 +387,76 @@ export function LeadTable({
 					</span>
 
 					{totalPages > 1 && (
-						<div className='flex items-center gap-2'>
-							<Button
-								variant='outline'
-								size='sm'
-								disabled={effectivePage <= 1}
-								onClick={function () {
-									setCurrentPage(function (previousPage) {
-										return Math.max(1, previousPage - 1)
-									})
-								}}
-							>
-								<CaretLeftIcon className='size-3.5' weight='bold' />
-								<span>Previous</span>
-							</Button>
+						<Pagination className='mx-0 w-auto justify-end'>
+							<PaginationContent>
+								<PaginationItem>
+									<PaginationPrevious
+										href='#'
+										aria-disabled={effectivePage <= 1}
+										tabIndex={effectivePage <= 1 ? -1 : undefined}
+										className={cn(
+											effectivePage <= 1 && 'pointer-events-none opacity-50'
+										)}
+										onClick={function (event) {
+											event.preventDefault()
+											if (effectivePage > 1) {
+												setCurrentPage(function (previousPage) {
+													return Math.max(1, previousPage - 1)
+												})
+											}
+										}}
+									/>
+								</PaginationItem>
 
-							<span className='text-muted-foreground text-xs'>
-								Page {effectivePage} of {totalPages}
-							</span>
+								{paginationItems.map(function (item, index) {
+									if (item === 'ellipsis-start' || item === 'ellipsis-end') {
+										return (
+											<PaginationItem key={`ellipsis-${index}`}>
+												<PaginationEllipsis />
+											</PaginationItem>
+										)
+									}
 
-							<Button
-								variant='outline'
-								size='sm'
-								disabled={effectivePage >= totalPages}
-								onClick={function () {
-									setCurrentPage(function (previousPage) {
-										return Math.min(totalPages, previousPage + 1)
-									})
-								}}
-							>
-								<span>Next</span>
-								<CaretRightIcon className='size-3.5' weight='bold' />
-							</Button>
-						</div>
+									const isCurrentPage = item === effectivePage
+
+									return (
+										<PaginationItem key={item}>
+											<PaginationLink
+												href='#'
+												isActive={isCurrentPage}
+												aria-label={`Go to page ${item}`}
+												onClick={function (event) {
+													event.preventDefault()
+													setCurrentPage(item)
+												}}
+											>
+												{item}
+											</PaginationLink>
+										</PaginationItem>
+									)
+								})}
+
+								<PaginationItem>
+									<PaginationNext
+										href='#'
+										aria-disabled={effectivePage >= totalPages}
+										tabIndex={effectivePage >= totalPages ? -1 : undefined}
+										className={cn(
+											effectivePage >= totalPages &&
+												'pointer-events-none opacity-50'
+										)}
+										onClick={function (event) {
+											event.preventDefault()
+											if (effectivePage < totalPages) {
+												setCurrentPage(function (previousPage) {
+													return Math.min(totalPages, previousPage + 1)
+												})
+											}
+										}}
+									/>
+								</PaginationItem>
+							</PaginationContent>
+						</Pagination>
 					)}
 				</div>
 			)}
